@@ -1,0 +1,43 @@
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+import os
+
+# 環境変数から認証情報を取得
+DB_USER = os.getenv("DB_USER", "root")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "Taku1019@326")
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_PORT = os.getenv("DB_PORT", "3306")
+DB_NAME = "Practical_db"  # new_databe
+
+# 最初はデータベースを指定せずに接続
+DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}"
+
+# エンジンの作成
+engine = create_engine(DATABASE_URL)
+
+try:
+    # データベース一覧を取得して新規作成
+    with engine.connect() as conn:
+        # 既存のデータベース一覧を取得
+        result = conn.execute(text("SHOW DATABASES"))
+        databases = [row[0] for row in result]
+        
+        # 新しいデータベースが存在しない場合は作成
+        if DB_NAME not in databases:
+            conn.execute(text(f"CREATE DATABASE {DB_NAME}"))
+            print(f"データベース '{DB_NAME}' を作成しました")
+        else:
+            print(f"データベース '{DB_NAME}' は既に存在します")
+        
+        # 作成後のデータベース一覧を表示
+        print("\nデータベース一覧:")
+        result = conn.execute(text("SHOW DATABASES"))
+        for row in result:
+            print(f"- {row[0]}")
+
+except Exception as e:
+    print(f"エラーが発生しました: {str(e)}")
+
+finally:
+    engine.dispose()
